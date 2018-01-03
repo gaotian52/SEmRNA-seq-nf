@@ -3,7 +3,7 @@
 params.fqs = "/home/ywq9361/RNA-seq/sequences_check_for_each_folder/test_HS280_and_HS282.tsv"
 params.transcriptome = "/home/ywq9361/RNA-seq/c.elegans.cdna.ncrna.fa"
 params.outdir = "results"
-params.multiqc = "/home/ywq9361/RNA-seq/multiqc"
+params.multiqc = "$baseDir/multiqc"
 File fq_file = new File(params.fqs)
 
 log.info """\
@@ -41,7 +41,7 @@ process index {
 process quant {
 
         tag "${ uniq_label }"
-        
+
         input:
            file index from index_ch
            set strain, SM, ID, NB, fq, folder, sub_folder, uniq_label from read_1_ch
