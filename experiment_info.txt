@@ -1,0 +1,3 @@
+run_accession condition sample
+EA-9_S9_L003_R1_001  ECA586  A
+EA-1_S1_L003_R1_001  N2  A
