@@ -16,6 +16,9 @@ log.info """\
          transcriptome: ${params.transcriptome}
          fqs          : ${params.fqs}
          outdir       : ${params.outdir}
+         fragment_len : ${params.fragment_len}
+         fragment_sd  : ${params.fragment_sd}
+         experiment   : ${params.experiment}
 
          """
          .stripIndent()
@@ -33,8 +36,8 @@ if( !transcriptome_file.exists() ) exit 1, "Missing transcriptome file: ${transc
 if( !exp_file.exists() ) exit 1, "Missing Experiment parameters file: ${exp_file}"
 
 Channel.from(fq_file.collect { it.tokenize("\t")})
-             .map { strain, SM, ID, NB, fq, folder, sub_folder, uniq_label -> [ strain, SM, ID, NB, file("${fq}"), folder, sub_folder, uniq_label] }
-             .into { read_1_ch; read_2_ch }
+             .map { strain, SM, ID, NB, fq, folder, sub_folder, uniq_label -> [ strain, SM, ID, NB, file("${fq}"), folder, sub_folder, uniq_label ] }
+             .into { read_1_ch; read_2_ch; read_3_ch }
 
 process index {
         tag "$transcriptome_file.simpleName"
@@ -99,7 +102,7 @@ process quant {
 
         input:
            file index from index_ch
-           set strain, SM, ID, NB, fq, folder, sub_folder, uniq_label from read_1_ch
+           set strain, SM, ID, NB, fq, folder, sub_folder, uniq_label from read_2_ch
 
         output:
            file(uniq_label) into quant_ch
@@ -114,7 +117,7 @@ process fastqc {
         tag "${ uniq_label }"
 
         input:
-            set strain, SM, ID, NB, fq, folder, sub_folder, uniq_label from read_2_ch
+            set strain, SM, ID, NB, fq, folder, sub_folder, uniq_label from read_3_ch
 
         output:
             file("${uniq_label}_log") into fastqc_ch
