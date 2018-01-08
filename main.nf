@@ -7,7 +7,7 @@ params.multiqc = "$baseDir/multiqc"
 params.fragment_len = '250'
 params.fragment_sd = '50'
 params.bootstrap = '100'
-params.experiment = "$baseDir/tutorial/experiment/hiseq_info.txt"
+params.experiment = "$baseDir/experiment_info.txt"
 File fq_file = new File(params.fqs)
 
 log.info """\
