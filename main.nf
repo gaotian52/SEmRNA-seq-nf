@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-params.fqs = "/home/ywq9361/RNA-seq/sequences_check_for_each_folder/test_HS280_and_HS282.tsv"
+params.fqs = "$baseDir/test.tsv"
 params.transcriptome = "/home/ywq9361/RNA-seq/c.elegans.cdna.ncrna.fa"
 params.outdir = "results"
 params.multiqc = "$baseDir/multiqc"
