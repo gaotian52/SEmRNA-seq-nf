@@ -16,21 +16,21 @@ s2c <- s2c[order(s2c$condition), ]
 
 print(s2c)
 
-ensembl <- biomaRt::useEnsembl(biomart="ensembl", dataset = "hsapiens_gene_ensembl", version=79)
+ensembl <- biomaRt::useEnsembl(biomart="ensembl", dataset = "celegans_gene_ensembl", version=79)
 
 t2g <- biomaRt::getBM(attributes = c("ensembl_transcript_id", "ensembl_gene_id", "external_gene_name"), mart = ensembl)
 t2g <- dplyr::rename(t2g, target_id = ensembl_transcript_id, ens_gene = ensembl_gene_id, ext_gene = external_gene_name)
 
 # Load the kallisto processed data into the object
-so <- sleuth_prep(s2c, ~ condition, target_mapping = t2g)
+so <- sleuth_prep(s2c, ~ condition, target_mapping = t2g, extra_bootstrap_summary = TRUE)
 
 # Estimate parameters for the sleuth response error measurement (full) model 
 so <- sleuth_fit(so)
 
 # Perform test
-so <- sleuth_wt(so,  'conditionscramble')
+so <- sleuth_wt(so,  'conditionN2')
 
-gene_table <- sleuth_gene_table(so, test = "conditionscramble", test_type = "wt")
+gene_table <- sleuth_gene_table(so, test = "conditionN2", test_type = "wt")
 
 write.table(gene_table, paste("gene_table_results.txt"), sep="\t")
 
