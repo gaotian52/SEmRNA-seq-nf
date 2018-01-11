@@ -2,7 +2,7 @@
 
 params.fqs = "$baseDir/test.tsv"
 params.transcriptome = "/home/ywq9361/RNA-seq/c.elegans.cdna.ncrna.fa"
-params.outdir = "results"
+params.output = "results"
 params.multiqc = "$baseDir/multiqc"
 params.fragment_len = '250'
 params.fragment_sd = '50'
@@ -15,9 +15,10 @@ log.info """\
          ===================================
          transcriptome: ${params.transcriptome}
          fqs          : ${params.fqs}
-         outdir       : ${params.outdir}
+         output       : ${params.outdir}
          fragment_len : ${params.fragment_len}
          fragment_sd  : ${params.fragment_sd}
+         bootstrap    : ${params.bootstrap}
          experiment   : ${params.experiment}
 
          """
@@ -35,31 +36,35 @@ if( !transcriptome_file.exists() ) exit 1, "Missing transcriptome file: ${transc
 
 if( !exp_file.exists() ) exit 1, "Missing Experiment parameters file: ${exp_file}"
 
-Channel.from(fq_file.collect { it.tokenize("\t")})
-             .map { strain, SM, ID, NB, fq, folder, sub_folder, uniq_label -> [ strain, SM, ID, NB, file("${fq}"), folder, sub_folder, uniq_label ] }
-             .into { read_1_ch; read_2_ch; read_3_ch }
+Channel
+    .from(fq_file.collect { it.tokenize("\t")})
+    .map { strain, SM, ID, NB, fq, folder, sub_folder, uniq_label -> [ strain, SM, ID, NB, file("${fq}"), folder, sub_folder, uniq_label ] }
+    .into { read_1_ch; read_2_ch; read_3_ch }
 
-process index {
-        tag "$transcriptome_file.simpleName"
+process qc_index {
 
-        input:
-           file transcriptome from transcriptome_file
+    tag "$transcriptome_file.simpleName"
 
-        output:
-           file 'index' into index_ch
+    input:
+        file transcriptome from transcriptome_file
+
+    output:
+        file 'index' into index_ch
 
         """
-           salmon index -t $transcriptome -i index
+        salmon index -t $transcriptome -i index
         """
-    }
+}
+
 process kal_index {
-        input:
+
+    input:
         file transcriptome_file
 
-        output:
+    output:
         file "transcriptome.index" into transcriptome_index
 
-        script:
+    script:
         //
         // Kallisto mapper index
         //
@@ -67,15 +72,17 @@ process kal_index {
         kallisto index -i transcriptome.index ${transcriptome_file}
         """
 }
-process mapping {
-    tag "reads: $name"
+
+process kal_mapping {
+
+    tag "reads: $SM"
 
     input:
-    file index from transcriptome_index
-    set strain, SM, ID, NB, fq, folder, sub_folder, uniq_label from read_1_ch
+        file index from transcriptome_index
+        set strain, SM, ID, NB, fq, folder, sub_folder, uniq_label from read_1_ch
 
     output:
-    file "kallisto_${name}" into kallisto_out_dirs
+        file "kallisto_${SM}" into kallisto_out_dirs
 
     script:
     //
@@ -84,79 +91,79 @@ process mapping {
     def single = fq instanceof Path
     if( !single ){
         """
-        mkdir kallisto_${name}
-        kallisto quant -b ${params.bootstrap} -i ${index} -t ${task.cpus} -o kallisto_${name} ${fq}
+        mkdir kallisto_${SM}
+        kallisto quant --bootstrap ${params.bootstrap} -i ${index} -t ${task.cpus} -o kallisto_${SM} ${fq}
         """
     }
     else {
         """
-        mkdir kallisto_${name}
-        kallisto quant --single -l ${params.fragment_len} -s ${params.fragment_sd} -b ${params.bootstrap} -i ${index} -t ${task.cpus} -o 
-        kallisto_${name} ${fq}
+        mkdir kallisto_${SM}
+        kallisto quant --single -l ${params.fragment_len} -s ${params.fragment_sd} -bootstrap ${params.bootstrap} -i ${index} -t ${task.cpus} -o kallisto_${SM} ${fq}
         """
     }
 }
+
 process quant {
 
-        tag "${ uniq_label }"
+    tag "${ SM }"
 
-        input:
-           file index from index_ch
-           set strain, SM, ID, NB, fq, folder, sub_folder, uniq_label from read_2_ch
+    input:
+        file index from index_ch
+        set strain, SM, ID, NB, fq, folder, sub_folder, uniq_label from read_2_ch
 
-        output:
-           file(uniq_label) into quant_ch
+    output:
+        file(ID) into quant_ch
 
         """
-           salmon quant -p 10 -i index -l U -r ${fq} -o ${uniq_label}
+           salmon quant -p 10 -i index -l U -r ${fq} -o ${ID}
         """
-    }
+}
 
 process fastqc {
 
-        tag "${ uniq_label }"
+    tag "${ SM }"
 
-        input:
-            set strain, SM, ID, NB, fq, folder, sub_folder, uniq_label from read_3_ch
+    input:
+        set strain, SM, ID, NB, fq, folder, sub_folder, uniq_label from read_3_ch
 
-        output:
-            file("${uniq_label}_log") into fastqc_ch
+    output:
+        file("${SM}_log") into fastqc_ch
 
-        script:
-            """
-            mkdir -p ${uniq_label}_log
-            fastqc -o ${uniq_label}_log -f fastq -q ${fq}
-            """
-        }
+    script:
+        """
+        mkdir -p ${SM}_log
+        fastqc -o ${SM}_log -f fastq -q ${fq}
+        """
+}
 
 process multiqc {
-        publishDir params.outdir, mode:'copy'
 
-        input:
-            file('*') from quant_ch.mix(fastqc_ch).collect()
-            file(config) from multiqc_file
+    input:
+        file('*') from quant_ch.mix(fastqc_ch).collect()
+        file(config) from multiqc_file
 
-        output:
-            file('multiqc_report.html')
+    output:
+        file('multiqc_report.html')
 
-        script:
-            """
-            cp $config/* .
-            echo "custom_logo: \$PWD/logo.png" >> multiqc_config.yaml
-            multiqc .
-            """
-        }
+    script:
+        """
+        cp $config/* .
+        echo "custom_logo: \$PWD/logo.png" >> multiqc_config.yaml
+        multiqc .
+        """
+}
 
 process sleuth {
-        input:
+
+    input:
         file 'kallisto/*' from kallisto_out_dirs.collect()   
         file exp_file
 
-        output: 
+    output: 
         file 'sleuth_object.so'
         file 'gene_table_results.txt'
 
-        script:
+    script:
         //
         // Setup sleuth R dependancies and environment
         //
@@ -167,5 +174,5 @@ process sleuth {
 }
 
 workflow.onComplete {
-        println ( workflow.success ? "\nDone! Open the following report in your browser --> $params.outdir/multiqc_report.html\n" : "Oops .. something went wrong" )
-        }
+    println ( workflow.success ? "\nDone! Open all the results --> $params.output\n" : "Oops .. something went wrong" )
+}
