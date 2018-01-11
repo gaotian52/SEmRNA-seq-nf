@@ -98,7 +98,7 @@ process kal_mapping {
     else {
         """
         mkdir kallisto_${SM}
-        kallisto quant --single -l ${params.fragment_len} -s ${params.fragment_sd} -bootstrap ${params.bootstrap} -i ${index} -t ${task.cpus} -o kallisto_${SM} ${fq}
+        kallisto quant --single -l ${params.fragment_len} -s ${params.fragment_sd} --bootstrap ${params.bootstrap} -i ${index} -t ${task.cpus} -o kallisto_${SM} ${fq}
         """
     }
 }
