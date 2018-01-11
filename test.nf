@@ -36,9 +36,9 @@ if( !transcriptome_file.exists() ) exit 1, "Missing transcriptome file: ${transc
 if( !exp_file.exists() ) exit 1, "Missing Experiment parameters file: ${exp_file}"
 
 Channel
-             .fromFilePairs( params.fqs, size: -1 )
-             .ifEmpty { error "Cannot find any reads matching: ${params.fqs}" }
-             .into { read_1_ch; read_2_ch; read_3_ch }
+      .fromFilePairs( params.fqs, size: -1 )
+      .ifEmpty { error "Cannot find any reads matching: ${params.fqs}" }
+      .into { read_1_ch; read_2_ch; read_3_ch }
 
 process index {
         tag "$transcriptome_file.simpleName"
@@ -86,16 +86,17 @@ process kal_mapping {
     if( !single ){
         """
         mkdir kallisto_${name}
-        kallisto quant -b ${params.bootstrap} -i ${index} -t ${task.cpus} -o kallisto_${name} ${fq}
+        kallisto quant --bootstrap ${params.bootstrap} -i ${index} -t ${task.cpus} -o kallisto_${name} ${fq}
         """
     }
     else {
         """
         mkdir kallisto_${name}
-        kallisto quant --single -l ${params.fragment_len} -s ${params.fragment_sd} -b ${params.bootstrap} -i ${index} -t ${task.cpus} -o kallisto_${name} ${fq}
+        kallisto quant --single -l ${params.fragment_len} -s ${params.fragment_sd} --bootstrap ${params.bootstrap} -i ${index} -t ${task.cpus} -o kallisto_${name} ${fq}
         """
     }
 }
+
 process quant {
 
         tag "${ name }"
