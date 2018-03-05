@@ -1,20 +1,20 @@
 #!/usr/bin/env nextflow
 
-params.fqs = "$baseDir/test_data/**.gz"
-params.transcriptome = "$baseDir/test_data/c.elegans.cdna.ncrna.fa"
+params.fqs = "${workflow.projectDir}/test_data/**.gz"
+params.transcriptome = "${workflow.projectDir}/test_data/c.elegans.cdna.ncrna.fa"
 params.output = "results"
-params.multiqc = "$baseDir/multiqc"
+params.multiqc = "${workflow.projectDir}/multiqc"
 params.fragment_len = '250'
 params.fragment_sd = '50'
 params.bootstrap = '100'
-params.experiment = "$baseDir/experiment_info.txt"
+params.experiment = "${workflow.projectDir}/experiment_info.txt"
 
 log.info """\
-         R N A S E Q - N F   P I P E L I N E  (Kallisto plus QC)
+         R N A S E Q - N F   P I P E L I N E  
          ===================================
          transcriptome: ${params.transcriptome}
          fqs          : ${params.fqs}
-         output       : ${params.outdir}
+         output       : ${params.output}
          fragment_len : ${params.fragment_len}
          fragment_sd  : ${params.fragment_sd}
          bootstrap    : ${params.bootstrap}
@@ -40,7 +40,7 @@ Channel
     .ifEmpty { error "Cannot find any reads matching: ${params.fqs}" }
     .into { read_1_ch; read_2_ch; read_3_ch }
 
-process index {
+process qc_index {
 
     tag "$transcriptome_file.simpleName"
 
@@ -64,9 +64,7 @@ process kal_index {
         file "transcriptome.index" into transcriptome_index
 
     script:
-    //
-    // Kallisto mapper index
-    //
+
     """
     kallisto index -i transcriptome.index ${transcriptome_file}
     """
@@ -102,7 +100,7 @@ process kal_mapping {
     }
 }
 
-process quant {
+process salmon_quant {
 
     tag "${ name }"
 
@@ -111,12 +109,21 @@ process quant {
         set val(name), file( fq ) from read_2_ch
 
     output:
-        file(name) into quant_ch
+        file("${name}_quant") into quant_ch
 
+    script:
+    def single = fq instanceof Path
+    if( !single ){
         """
-        salmon quant -p 10 -i index -l U -r ${fq} -o ${name}
+           salmon quant --libType=U -i index -1 ${fq[0]} -2 ${fq[1]} -o ${name}_quant
         """
     }
+    else {
+        """
+           salmon quant -i index -l U -r ${fq} -o ${name}_quant
+        """
+    }
+}
 
 process fastqc {
 
