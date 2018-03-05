@@ -1,25 +1,26 @@
 #!/usr/bin/env nextflow
 
-params.fqs = "$baseDir/test.tsv"
-params.transcriptome = "/home/ywq9361/RNA-seq/c.elegans.cdna.ncrna.fa"
+params.fqs = "${workflow.projectDir}/test.tsv"
+params.transcriptome = "${workflow.projectDir}/test_data/c.elegans.cdna.ncrna.fa"
 params.output = "results"
-params.multiqc = "$baseDir/multiqc"
+params.multiqc = "${workflow.projectDir}/multiqc"
 params.fragment_len = '250'
 params.fragment_sd = '50'
 params.bootstrap = '100'
-params.experiment = "$baseDir/experiment_info.txt"
+params.experiment = "${workflow.projectDir}/experiment_info.txt"
+
 File fq_file = new File(params.fqs)
 
 log.info """\
-         R N A S E Q - N F   P I P E L I N E  (Kallisto plus QC)
+         R N A S E Q - N F   P I P E L I N E  
          ===================================
-         transcriptome: ${params.transcriptome}
-         fqs          : ${params.fqs}
-         output       : ${params.outdir}
-         fragment_len : ${params.fragment_len}
-         fragment_sd  : ${params.fragment_sd}
-         bootstrap    : ${params.bootstrap}
-         experiment   : ${params.experiment}
+         transcriptome: ${ params.transcriptome }
+         fqs          : ${ params.fqs }
+         output       : ${ params.output }
+         fragment_len : ${ params.fragment_len } 
+         fragment_sd  : ${ params.fragment_sd }
+         bootstrap    : ${ params.bootstrap }
+         experiment   : ${ params.experiment }
 
          """
          .stripIndent()
@@ -37,7 +38,7 @@ if( !transcriptome_file.exists() ) exit 1, "Missing transcriptome file: ${transc
 if( !exp_file.exists() ) exit 1, "Missing Experiment parameters file: ${exp_file}"
 
 Channel
-    .from(fq_file.collect { it.tokenize("\t")})
+    .from(fq_file.collect { it.tokenize("\t") })
     .map { strain, SM, ID, NB, fq, folder, sub_folder, uniq_label -> [ strain, SM, ID, NB, file("${fq}"), folder, sub_folder, uniq_label ] }
     .into { read_1_ch; read_2_ch; read_3_ch }
 
@@ -103,7 +104,7 @@ process kal_mapping {
     }
 }
 
-process quant {
+process salmon_quant {
 
     tag "${ SM }"
 
@@ -114,9 +115,18 @@ process quant {
     output:
         file(ID) into quant_ch
 
+    script:
+    def single = fq instanceof Path
+    if( !single ){
         """
-           salmon quant -p 10 -i index -l U -r ${fq} -o ${ID}
+           salmon quant --libType=U -i index -1 ${fq[0]} -2 ${fq[1]} -o ${ID}
         """
+    }
+    else {
+        """
+           salmon quant -i index -l U -r ${fq} -o ${ID}
+        """
+    }
 }
 
 process fastqc {
