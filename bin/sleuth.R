@@ -14,8 +14,7 @@ s2c <- dplyr::select(s2c, sample = run_accession, condition)
 s2c <- dplyr::mutate(s2c, path = kal_dirs)
 s2c <- s2c[order(s2c$condition), ]
 
-print(s2c)
-
+# Use ensembl as the reference transcriptome for analysis
 ensembl <- biomaRt::useEnsembl(biomart = "ensembl", dataset = "celegans_gene_ensembl", version = 91)
 
 t2g <- biomaRt::getBM(attributes = c("ensembl_transcript_id", "ensembl_gene_id", "external_gene_name"), mart = ensembl)
@@ -35,8 +34,9 @@ so <- sleuth_fit(so, ~condition, 'full')
 so <- sleuth_fit(so, ~1, 'reduced')
 so <- sleuth_lrt(so, 'reduced', 'full')
 
+# Generate the whole gene table
 gene_table <- sleuth_gene_table(so, test = "conditionN2", test_type = "wt")
-
 write.table(gene_table, paste("gene_table_results.txt"), sep="\t")
 
+# Saving for shinny
 save(so, file=paste("sleuth_object.so"))
