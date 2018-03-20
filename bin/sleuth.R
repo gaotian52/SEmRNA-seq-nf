@@ -20,18 +20,10 @@ t2g <- biomaRt::getBM(attributes = c("ensembl_transcript_id", "ensembl_gene_id",
 t2g <- dplyr::rename(t2g, target_id = ensembl_transcript_id, ens_gene = ensembl_gene_id, ext_gene = external_gene_name)
 
 # Load the kallisto processed data into the object
-so <- sleuth_prep(s2c, ~ condition, target_mapping = t2g, read_bootstrap_tpm = TRUE, extra_bootstrap_summary = TRUE)
+so <- sleuth_prep(s2c, ~ condition, target_mapping = t2g, read_bootstrap_tpm = TRUE, extra_bootstrap_summary = TRUE, aggregation_column = 'ens_gene')
 so <- sleuth_fit(so)
-so <- sleuth_wt(so,  'conditionN2')
-
-# Fit the full and reduced model and perform the test
-so <- sleuth_fit(so, ~condition, 'full')
-so <- sleuth_fit(so, ~1, 'reduced')
-so <- sleuth_lrt(so, 'reduced', 'full')
 
 # Generate the whole gene table
-gene_table <- sleuth_gene_table(so, test = "conditionN2", test_type = "wt")
-write.table(gene_table, paste("gene_table_results.txt"), sep="\t")
-
+gene_table <- kallisto_table(so)
 # Saving for shinny
 save(so, file=paste("sleuth_object.so"))
