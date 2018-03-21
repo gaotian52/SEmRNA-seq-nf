@@ -1,13 +1,13 @@
 #!/usr/bin/env nextflow
 
-params.fqs = "test.tsv"
-params.transcriptome = "test_data/c.elegans.cdna.ncrna.fa"
+params.fqs = "$baseDir/test.tsv"
+params.transcriptome = "$baseDir/test_data/c.elegans.cdna.ncrna.fa"
 params.output = "results"
-params.multiqc = "multiqc"
+params.multiqc = "$baseDir/multiqc"
 params.fragment_len = '250'
 params.fragment_sd = '50'
 params.bootstrap = '100'
-params.experiment = "experiment_info.txt"
+params.experiment = "$baseDir/experiment_info.txt"
 
 File fq_file = new File(params.fqs)
 
