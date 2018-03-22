@@ -2,3 +2,5 @@ results/
 work/
 .nextflow*
 .nextflow.history
+report.html*
+trace.txt*
