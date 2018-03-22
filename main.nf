@@ -8,6 +8,7 @@ params.fragment_len = '250'
 params.fragment_sd = '50'
 params.bootstrap = '100'
 params.experiment = "$baseDir/experiment_info.txt"
+params.email = ""
 
 File fq_file = new File(params.fqs)
 
@@ -183,5 +184,25 @@ process sleuth {
 }
 
 workflow.onComplete {
-    println ( workflow.success ? "\nDone! Open all the results --> $params.output\n" : "Oops .. something went wrong" )
+    summary = """
+    Pipeline execution summary
+    ---------------------------
+    Completed at: ${workflow.complete}
+    Duration    : ${workflow.duration}
+    Success     : ${workflow.success}
+    workDir     : ${workflow.workDir}
+    exit status : ${workflow.exitStatus}
+    Error report: ${workflow.errorReport ?: '-'}
+    """
+    println summary
+    def outlog = new File("${params.output}/log.txt")
+    outlog.newWriter().withWriter {
+        outlog << param_summary
+        outlog << summary
+    }
+    // mail summary
+    if (params.email) {
+        ['mail', '-s', 'SEmRNA-seq-nf', params.email].execute() << summary
+    }
 }
+
