@@ -1,13 +1,14 @@
 #!/usr/bin/env nextflow
 
-params.fqs = "${workflow.projectDir}/test_data/**.gz"
-params.transcriptome = "${workflow.projectDir}/test_data/c.elegans.cdna.ncrna.fa"
+params.fqs = "$baseDir/test_data/**.gz"
+params.transcriptome = "$baseDir/test_data/c.elegans.cdna.ncrna.fa"
 params.output = "results"
-params.multiqc = "${workflow.projectDir}/multiqc"
+params.multiqc = "$baseDir/multiqc"
 params.fragment_len = '250'
 params.fragment_sd = '50'
 params.bootstrap = '100'
-params.experiment = "${workflow.projectDir}/experiment_info.txt"
+params.experiment = "$baseDir/experiment_info.txt"
+params.email = ""
 
 log.info """\
          R N A S E Q - N F   P I P E L I N E  
@@ -180,5 +181,24 @@ process sleuth {
 }
 
 workflow.onComplete {
-    println ( workflow.success ? "\nDone! Open all the results --> $params.output\n" : "Oops .. something went wrong" )
+    summary = """
+    Pipeline execution summary
+    ---------------------------
+    Completed at: ${workflow.complete}
+    Duration    : ${workflow.duration}
+    Success     : ${workflow.success}
+    workDir     : ${workflow.workDir}
+    exit status : ${workflow.exitStatus}
+    Error report: ${workflow.errorReport ?: '-'}
+    """
+    println summary
+    def outlog = new File("${params.output}/log.txt")
+    outlog.newWriter().withWriter {
+        outlog << param_summary
+        outlog << summary
+    }
+    // mail summary
+    if (params.email) {
+        ['mail', '-s', 'SEmRNA-seq-nf', params.email].execute() << summary
+    }
 }
