@@ -93,13 +93,13 @@ process kal_mapping {
     if( !single ){
         """
         mkdir kallisto_${SM}
-        kallisto quant --bootstrap ${params.bootstrap} -i ${index} -t ${task.cpus} -o kallisto_${SM} ${fq}
+        kallisto quant --bootstrap ${params.bootstrap} -i ${index} -o kallisto_${SM} ${fq}
         """
     }
     else {
         """
         mkdir kallisto_${SM}
-        kallisto quant --single -l ${params.fragment_len} -s ${params.fragment_sd} --bootstrap ${params.bootstrap} -i ${index} -t ${task.cpus} -o kallisto_${SM} ${fq}
+        kallisto quant --single -l ${params.fragment_len} -s ${params.fragment_sd} --bootstrap ${params.bootstrap} -i ${index} -o kallisto_${SM} ${fq}
         """
     }
 }
