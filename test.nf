@@ -13,13 +13,14 @@ params.email = ""
 log.info """\
          R N A S E Q - N F   P I P E L I N E  
          ===================================
-         transcriptome: ${params.transcriptome}
-         fqs          : ${params.fqs}
-         output       : ${params.output}
-         fragment_len : ${params.fragment_len}
-         fragment_sd  : ${params.fragment_sd}
-         bootstrap    : ${params.bootstrap}
-         experiment   : ${params.experiment}
+         transcriptome: ${ params.transcriptome }
+         fqs          : ${ params.fqs }
+         output       : ${ params.output }
+         fragment_len : ${ params.fragment_len }
+         fragment_sd  : ${ params.fragment_sd }
+         bootstrap    : ${ params.bootstrap }
+         experiment   : ${ params.experiment }
+         email        : ${ params.email } 
 
          """
          .stripIndent()
