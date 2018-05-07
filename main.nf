@@ -22,6 +22,7 @@ log.info """\
          fragment_sd  : ${ params.fragment_sd }
          bootstrap    : ${ params.bootstrap }
          experiment   : ${ params.experiment }
+         email        : ${ params.email }
 
          """
          .stripIndent()
