@@ -15,7 +15,7 @@ s2c <- dplyr::mutate(s2c, path = kal_dirs)
 
 
 # Extract gene or transcripts infromation from Ensemble data source
-ensembl <- biomaRt::useEnsembl(biomart = "ensembl", dataset = "celegans_gene_ensembl", version = 91)
+ensembl <- biomaRt::useEnsembl(biomart = "ensembl", dataset = "celegans_gene_ensembl", host = "www.ensembl.org")
 t2g <- biomaRt::getBM(attributes = c("ensembl_transcript_id", "ensembl_gene_id", "external_gene_name"), mart = ensembl)
 t2g <- dplyr::rename(t2g, target_id = ensembl_transcript_id, ens_gene = ensembl_gene_id, ext_gene = external_gene_name)
 
