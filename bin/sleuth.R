@@ -24,7 +24,7 @@ so <- sleuth_prep(s2c, target_mapping = t2g, read_bootstrap_tpm = TRUE, extra_bo
 
 so <- sleuth_fit(so, ~condition, 'full')
 so <- sleuth_fit(so, ~1, 'reduced')
-so <- sleuth_wt(so, 'conditionN2l2d')
+so <- sleuth_wt(so, 'conditionN2')
 so <- sleuth_lrt(so, 'reduced', 'full')
 full_results <- sleuth_results(so, 'reduced:full', 'lrt', show_all = FALSE)
 sleuth_significant <- dplyr::filter(full_results, qval <= 0.05)
