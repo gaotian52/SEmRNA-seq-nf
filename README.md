@@ -72,8 +72,8 @@ This pipeline will generate two folders, `kallisto` and `multiqc_report` in your
 `multiqc_report/`:
 ```
  
-├── multiqc_pre_trim_fastqc.html                 # Summary of FastQC results on raw FASTQ files
-├── multiqc_post_trim_fastqc.html    			 # Summary of FastQC results on FASTQ files trimmed by fastp
+├── multiqc_pre_trim_fastqc.html     # Summary of FastQC results on raw FASTQ files
+├── multiqc_post_trim_fastqc.html    # Summary of FastQC results on FASTQ files trimmed by fastp
 └── multiqc_kallisto.html       				 # Summary of kallisto log
 ```
 
