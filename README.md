@@ -43,7 +43,7 @@ Variant Call Format (VCF) file. Default = [WI.20200815.hard-filter.vcf.gz](https
 GFF3 file. Default = [c_elegans.PRJNA13758.WS276.annotations.gff3.gz](https://wormbase.org/)
 
 
-* -out
+* --out
 
 Used to specify the output directory. Default = "RNAseq_SE-${date}" 
 
